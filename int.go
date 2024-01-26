@@ -12,18 +12,13 @@ var (
 	_ Validatable = (*ValidatableInt[int16])(nil)
 	_ Validatable = (*ValidatableInt[int32])(nil)
 	_ Validatable = (*ValidatableInt[int64])(nil)
-	_ Validatable = (*ValidatableInt[uint])(nil)
-	_ Validatable = (*ValidatableInt[uint8])(nil)
-	_ Validatable = (*ValidatableInt[uint16])(nil)
-	_ Validatable = (*ValidatableInt[uint32])(nil)
-	_ Validatable = (*ValidatableInt[uint64])(nil)
 )
 
-type Ints interface {
-	int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 | uint64
+type ints interface {
+	int | int8 | int16 | int32 | int64
 }
 
-type ValidatableInt[T Ints] struct {
+type ValidatableInt[T ints] struct {
 	tag    *string
 	value  T
 	rules  []Rule
@@ -52,34 +47,194 @@ func (v *ValidatableInt[T]) Validate(data any, tags ...string) error {
 	return nil
 }
 
-func (v *ValidatableInt[T]) LT(max T, msg ...string) *ValidatableInt[T] {
+func (v *ValidatableInt[T]) Lt(max T, msg ...string) *ValidatableInt[T] {
 	v.rules = append(v.rules, func() error {
-		if !(v.value > max) {
+		switch {
+		case v.value < max:
 			return nil
-		}
-		if len(msg) > 0 {
+		case len(msg) > 0:
 			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <Lt(%d)>", *v.tag, v.value, max))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <Lt(%d)>", v.value, max))
 		}
-		if v.tag == nil {
-			return errors.New(fmt.Sprintf("failed <%T> validation for <LT(%d)>", v.value, max))
-		}
-		return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <LT(%d)>", *v.tag, v.value, max))
 	})
 	return v
 }
 
-func (v *ValidatableInt[T]) GT(min T, msg ...string) *ValidatableInt[T] {
+func (v *ValidatableInt[T]) Gt(min T, msg ...string) *ValidatableInt[T] {
 	v.rules = append(v.rules, func() error {
-		if !(v.value < min) {
+		switch {
+		case v.value > min:
 			return nil
-		}
-		if len(msg) > 0 {
+		case len(msg) > 0:
 			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <Gt(%d)>", *v.tag, v.value, min))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <Gt(%d)>", v.value, min))
 		}
-		if v.tag == nil {
-			return errors.New(fmt.Sprintf("failed <%T> validation for <GT(%d)>", v.value, min))
+	})
+	return v
+}
+
+func (v *ValidatableInt[T]) Lte(max T, msg ...string) *ValidatableInt[T] {
+	v.rules = append(v.rules, func() error {
+		switch {
+		case v.value <= max:
+			return nil
+		case len(msg) > 0:
+			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <Lte(%d)>", *v.tag, v.value, max))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <Lte(%d)>", v.value, max))
 		}
-		return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <GT(%d)>", *v.tag, v.value, min))
+	})
+	return v
+}
+
+func (v *ValidatableInt[T]) Gte(min T, msg ...string) *ValidatableInt[T] {
+	v.rules = append(v.rules, func() error {
+		switch {
+		case v.value >= min:
+			return nil
+		case len(msg) > 0:
+			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <Gte(%d)>", *v.tag, v.value, min))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <Gte(%d)>", v.value, min))
+		}
+	})
+	return v
+}
+
+func (v *ValidatableInt[T]) Eq(to T, msg ...string) *ValidatableInt[T] {
+	v.rules = append(v.rules, func() error {
+		switch {
+		case v.value == to:
+			return nil
+		case len(msg) > 0:
+			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <Eq(%d)>", *v.tag, v.value, to))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <Eq(%d)>", v.value, to))
+		}
+	})
+	return v
+}
+
+func (v *ValidatableInt[T]) NotEq(to T, msg ...string) *ValidatableInt[T] {
+	v.rules = append(v.rules, func() error {
+		switch {
+		case v.value != to:
+			return nil
+		case len(msg) > 0:
+			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <NotEq(%d)>", *v.tag, v.value, to))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <NotEq(%d)>", v.value, to))
+		}
+	})
+	return v
+}
+
+func (v *ValidatableInt[T]) Positive(msg ...string) *ValidatableInt[T] {
+	v.rules = append(v.rules, func() error {
+		switch {
+		case v.value > 0:
+			return nil
+		case len(msg) > 0:
+			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <Positive>", *v.tag, v.value))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <Positive>", v.value))
+		}
+	})
+	return v
+}
+
+func (v *ValidatableInt[T]) Negative(msg ...string) *ValidatableInt[T] {
+	v.rules = append(v.rules, func() error {
+		switch {
+		case v.value < 0:
+			return nil
+		case len(msg) > 0:
+			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <Negative>", *v.tag, v.value))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <Negative>", v.value))
+		}
+	})
+	return v
+}
+
+func (v *ValidatableInt[T]) NonNegative(msg ...string) *ValidatableInt[T] {
+	v.rules = append(v.rules, func() error {
+		switch {
+		case v.value >= 0:
+			return nil
+		case len(msg) > 0:
+			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <NonNegative>", *v.tag, v.value))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <NonNegative>", v.value))
+		}
+	})
+	return v
+}
+
+func (v *ValidatableInt[T]) NonPositive(msg ...string) *ValidatableInt[T] {
+	v.rules = append(v.rules, func() error {
+		switch {
+		case v.value <= 0:
+			return nil
+		case len(msg) > 0:
+			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <NonPositive>", *v.tag, v.value))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <NonPositive>", v.value))
+		}
+	})
+	return v
+}
+
+func (v *ValidatableInt[T]) NonZero(msg ...string) *ValidatableInt[T] {
+	v.rules = append(v.rules, func() error {
+		switch {
+		case v.value != 0:
+			return nil
+		case len(msg) > 0:
+			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <NonZero>", *v.tag, v.value))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <NonZero>", v.value))
+		}
+	})
+	return v
+}
+
+func (v *ValidatableInt[T]) Custom(rule func(T) bool, msg ...string) *ValidatableInt[T] {
+	v.rules = append(v.rules, func() error {
+		switch {
+		case rule(v.value):
+			return nil
+		case len(msg) > 0:
+			return errors.New(msg[0])
+		case v.tag != nil:
+			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <Custom>", *v.tag, v.value))
+		default:
+			return errors.New(fmt.Sprintf("failed <%T> validation for <Custom>", v.value))
+		}
 	})
 	return v
 }
@@ -102,24 +257,4 @@ func Int32() *ValidatableInt[int32] {
 
 func Int64() *ValidatableInt[int64] {
 	return &ValidatableInt[int64]{}
-}
-
-func Uint() *ValidatableInt[uint] {
-	return &ValidatableInt[uint]{}
-}
-
-func Uint8() *ValidatableInt[uint8] {
-	return &ValidatableInt[uint8]{}
-}
-
-func Uint16() *ValidatableInt[uint16] {
-	return &ValidatableInt[uint16]{}
-}
-
-func Uint32() *ValidatableInt[uint32] {
-	return &ValidatableInt[uint32]{}
-}
-
-func Uint64() *ValidatableInt[uint64] {
-	return &ValidatableInt[uint64]{}
 }

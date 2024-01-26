@@ -17,6 +17,10 @@ func (s Struct) Validate(data any, tags ...string) error {
 		break // do nothing
 	case reflect.Ptr:
 		data = reflect.ValueOf(data).Elem().Interface()
+		if reflect.TypeOf(data).Kind() == reflect.Struct {
+			break
+		}
+		fallthrough
 	default:
 		if len(tags) > 0 {
 			return errors.New(tags[0] + " failed validation for <Struct>")
