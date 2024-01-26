@@ -18,12 +18,10 @@ func (s Struct) Validate(data any, tags ...string) error {
 	case reflect.Ptr:
 		data = reflect.ValueOf(data).Elem().Interface()
 	default:
-		switch len(tags) {
-		case 0:
-			return errors.New("failed validation for <Struct>")
-		default:
+		if len(tags) > 0 {
 			return errors.New(tags[0] + " failed validation for <Struct>")
 		}
+		return errors.New("failed validation for <Struct>")
 	}
 	t := reflect.TypeOf(data)
 
@@ -33,16 +31,15 @@ func (s Struct) Validate(data any, tags ...string) error {
 	}
 
 	var errs []string
-	for zTag, value := range s {
-		v, ok := values[zTag]
-		if !ok {
-			return errors.New("tag <" + zTag + "> not found for <Struct>")
-		}
-
+	for tag, schema := range s {
+		value, exists := values[tag]
 		if len(tags) > 0 {
-			zTag = tags[0] + "." + zTag
+			tag = tags[0] + "." + tag
 		}
-		if err := value.Validate(v, zTag); err != nil {
+		if !exists {
+			return errors.New("tag <" + tag + "> not found for <Struct>")
+		}
+		if err := schema.Validate(value, tag); err != nil {
 			errs = append(errs, err.Error())
 		}
 	}

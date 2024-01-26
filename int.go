@@ -36,12 +36,10 @@ func (v *ValidatableInt[T]) Validate(data any, tags ...string) error {
 	}
 	var ok bool
 	if v.value, ok = data.(T); !ok {
-		switch v.tag {
-		case nil:
+		if v.tag == nil {
 			return errors.New(fmt.Sprintf("failed validation for <%T>", v.value))
-		default:
-			return errors.New(fmt.Sprintf("<%s> failed validation for <%T>", *v.tag, v.value))
 		}
+		return errors.New(fmt.Sprintf("<%s> failed validation for <%T>", *v.tag, v.value))
 	}
 	for _, rule := range v.rules {
 		if err := rule(); err != nil {
@@ -56,36 +54,32 @@ func (v *ValidatableInt[T]) Validate(data any, tags ...string) error {
 
 func (v *ValidatableInt[T]) LT(max T, msg ...string) *ValidatableInt[T] {
 	v.rules = append(v.rules, func() error {
-		if v.value > max {
-			if len(msg) > 0 {
-				return errors.New(msg[0])
-			}
-			switch v.tag {
-			case nil:
-				return errors.New(fmt.Sprintf("failed <%T> validation for <LT(%d)>", v.value, max))
-			default:
-				return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <LT(%d)>", *v.tag, v.value, max))
-			}
+		if !(v.value > max) {
+			return nil
 		}
-		return nil
+		if len(msg) > 0 {
+			return errors.New(msg[0])
+		}
+		if v.tag == nil {
+			return errors.New(fmt.Sprintf("failed <%T> validation for <LT(%d)>", v.value, max))
+		}
+		return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <LT(%d)>", *v.tag, v.value, max))
 	})
 	return v
 }
 
 func (v *ValidatableInt[T]) GT(min T, msg ...string) *ValidatableInt[T] {
 	v.rules = append(v.rules, func() error {
-		if v.value < min {
-			if len(msg) > 0 {
-				return errors.New(msg[0])
-			}
-			switch v.tag {
-			case nil:
-				return errors.New(fmt.Sprintf("failed <%T> validation for <GT(%d)>", v.value, min))
-			default:
-				return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <GT(%d)>", *v.tag, v.value, min))
-			}
+		if !(v.value < min) {
+			return nil
 		}
-		return nil
+		if len(msg) > 0 {
+			return errors.New(msg[0])
+		}
+		if v.tag == nil {
+			return errors.New(fmt.Sprintf("failed <%T> validation for <GT(%d)>", v.value, min))
+		}
+		return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <GT(%d)>", *v.tag, v.value, min))
 	})
 	return v
 }

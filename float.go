@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+var (
+	_ Validatable = (*ValidatableFloat[float32])(nil)
+	_ Validatable = (*ValidatableFloat[float64])(nil)
+)
+
 type Floats interface {
 	float32 | float64
 }
@@ -23,12 +28,10 @@ func (v *ValidatableFloat[T]) Validate(data any, tags ...string) error {
 	}
 	var ok bool
 	if v.value, ok = data.(T); !ok {
-		switch v.tag {
-		case nil:
+		if v.tag == nil {
 			return errors.New(fmt.Sprintf("failed validation for <%T>", v.value))
-		default:
-			return errors.New(fmt.Sprintf("<%s> failed validation for <%T>", *v.tag, v.value))
 		}
+		return errors.New(fmt.Sprintf("<%s> failed validation for <%T>", *v.tag, v.value))
 	}
 	for _, rule := range v.rules {
 		if err := rule(); err != nil {
@@ -49,12 +52,10 @@ func (v *ValidatableFloat[T]) LT(max T, msg ...string) *ValidatableFloat[T] {
 		if len(msg) > 0 {
 			return errors.New(msg[0])
 		}
-		switch v.tag {
-		case nil:
+		if v.tag == nil {
 			return errors.New(fmt.Sprintf("failed <%T> validation for <LT(%g)>", v.value, max))
-		default:
-			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <LT(%g)>", *v.tag, v.value, max))
 		}
+		return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <LT(%g)>", *v.tag, v.value, max))
 	})
 	return v
 }
@@ -67,12 +68,10 @@ func (v *ValidatableFloat[T]) GT(min T, msg ...string) *ValidatableFloat[T] {
 		if len(msg) > 0 {
 			return errors.New(msg[0])
 		}
-		switch v.tag {
-		case nil:
+		if v.tag == nil {
 			return errors.New(fmt.Sprintf("failed <%T> validation for <GT(%g)>", v.value, min))
-		default:
-			return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <GT(%g)>", *v.tag, v.value, min))
 		}
+		return errors.New(fmt.Sprintf("<%s> failed <%T> validation for <GT(%g)>", *v.tag, v.value, min))
 	})
 	return v
 }
