@@ -66,7 +66,7 @@ func (s Struct) Validate(data any, tags ...string) Errors {
 
 	// due to maps being unordered, sort tags to allow for predictable validation
 	keys := make([]string, 0, len(s))
-	for k := range values {
+	for k := range s {
 		keys = append(keys, k)
 	}
 	slices.Sort(keys)
@@ -96,10 +96,14 @@ func (s Struct) Validate(data any, tags ...string) Errors {
 	return nil
 }
 
+// Optional converts z.Struct to z.OptionalStruct marking it as optional.
+// Calling Validate with nil or a nil string pointer will skip validation.
 func (s Struct) Optional() OptionalStruct {
 	return OptionalStruct(s)
 }
 
+// OptionalStruct is a map of z-tags to Validatable schemas. If the data is
+// nil, or a nil pointer, validation will be skipped.
 type OptionalStruct map[string]Validatable
 
 // Validate validates a struct or a struct pointer (if it's not nil) against its schema.
