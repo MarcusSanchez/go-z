@@ -114,6 +114,25 @@ func (v *ValidatableString) Email(msg ...string) *ValidatableString {
 	return v
 }
 
+// In appends a rule validating that data is in the provided slice of values.
+func (v *ValidatableString) In(values []string, msg ...string) *ValidatableString {
+	v.rules = append(v.rules, func() string {
+		for _, value := range values {
+			if v.value == value {
+				return ""
+			}
+		}
+		if len(msg) > 0 {
+			return msg[0]
+		}
+		if v.tag != nil {
+			return fmt.Sprintf("<%s> failed <%T> validation for <In(%s)>", *v.tag, v.value, values)
+		}
+		return fmt.Sprintf("failed <%T> validation for <In(%s)>", v.value, values)
+	})
+	return v
+}
+
 // Regex appends a rule validating that data matches the provided regex.
 func (v *ValidatableString) Regex(regex string, msg ...string) *ValidatableString {
 	v.rules = append(v.rules, func() string {

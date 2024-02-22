@@ -138,6 +138,23 @@ func (v *ValidatableUint[T]) Gte(min T, msg ...string) *ValidatableUint[T] {
 	return v
 }
 
+// Range appends a rule validating that data is within the provided range. (min <= data <= max)
+func (v *ValidatableUint[T]) Range(min, max T, msg ...string) *ValidatableUint[T] {
+	v.rules = append(v.rules, func() string {
+		switch {
+		case min <= v.value && v.value <= max:
+			return ""
+		case len(msg) > 0:
+			return msg[0]
+		case v.tag != nil:
+			return fmt.Sprintf("<%s> failed <%T> validation for <Range(%d, %d)>", *v.tag, v.value, min, max)
+		default:
+			return fmt.Sprintf("failed <%T> validation for <Range(%d, %d)>", v.value, min, max)
+		}
+	})
+	return v
+}
+
 // Eq appends a rule validating that data is equal to the provided value. (data == to)
 func (v *ValidatableUint[T]) Eq(to T, msg ...string) *ValidatableUint[T] {
 	v.rules = append(v.rules, func() string {
@@ -185,6 +202,25 @@ func (v *ValidatableUint[T]) NonZero(msg ...string) *ValidatableUint[T] {
 		default:
 			return fmt.Sprintf("failed <%T> validation for <NonZero>", v.value)
 		}
+	})
+	return v
+}
+
+// In appends a rule validating that data is in the provided slice of values.
+func (v *ValidatableUint[T]) In(values []T, msg ...string) *ValidatableUint[T] {
+	v.rules = append(v.rules, func() string {
+		for _, value := range values {
+			if v.value == value {
+				return ""
+			}
+		}
+		if len(msg) > 0 {
+			return msg[0]
+		}
+		if v.tag != nil {
+			return fmt.Sprintf("<%s> failed <%T> validation for <In(%s)>", *v.tag, v.value, values)
+		}
+		return fmt.Sprintf("failed <%T> validation for <In(%s)>", v.value, values)
 	})
 	return v
 }
