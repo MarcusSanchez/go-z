@@ -114,6 +114,57 @@ func (v *ValidatableString) Email(msg ...string) *ValidatableString {
 	return v
 }
 
+// Eq appends a rule validating that data is equal to the provided value. (data == value)
+func (v *ValidatableString) Eq(value string, msg ...string) *ValidatableString {
+	v.rules = append(v.rules, func() string {
+		switch {
+		case v.value == value:
+			return ""
+		case len(msg) > 0:
+			return msg[0]
+		case v.tag != nil:
+			return fmt.Sprintf("<%s> failed <string> validation for <Eq(%s)>", *v.tag, value)
+		default:
+			return fmt.Sprintf("failed <string> validation for <Eq(%s)>", value)
+		}
+	})
+	return v
+}
+
+// NotEq appends a rule validating that data is not equal to the provided value. (data != value)
+func (v *ValidatableString) NotEq(value string, msg ...string) *ValidatableString {
+	v.rules = append(v.rules, func() string {
+		switch {
+		case v.value != value:
+			return ""
+		case len(msg) > 0:
+			return msg[0]
+		case v.tag != nil:
+			return fmt.Sprintf("<%s> failed <string> validation for <NotEq(%s)>", *v.tag, value)
+		default:
+			return fmt.Sprintf("failed <string> validation for <NotEq(%s)>", value)
+		}
+	})
+	return v
+}
+
+// NotEmpty appends a rule validating that data is not an empty string.
+func (v *ValidatableString) NotEmpty(msg ...string) *ValidatableString {
+	v.rules = append(v.rules, func() string {
+		switch {
+		case v.value != "":
+			return ""
+		case len(msg) > 0:
+			return msg[0]
+		case v.tag != nil:
+			return fmt.Sprintf("<%s> failed <string> validation for <NotEmpty>", *v.tag)
+		default:
+			return "failed <string> validation for <NotEmpty>"
+		}
+	})
+	return v
+}
+
 // In appends a rule validating that data is in the provided slice of values.
 func (v *ValidatableString) In(values []string, msg ...string) *ValidatableString {
 	v.rules = append(v.rules, func() string {
